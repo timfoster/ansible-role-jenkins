@@ -1,10 +1,11 @@
 ---
 - name: Ensure dependencies are installed.
-  package:
+  dnf:
     name:
       - curl
       - initscripts
       - "{{ 'libselinux-python' if ansible_python['version']['major'] < 3 else 'python3-libselinux' }}"
+    allowerasing: true
     state: present
 
 - name: Ensure Jenkins repo is installed.

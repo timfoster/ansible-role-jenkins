@@ -19,6 +19,7 @@ jenkins_https_crt: jenkins.crt
 jenkins_https_key: jenkins.key
 jenkins_jar_location: /opt/jenkins-cli.jar
 jenkins_url_prefix: ""
+jenkins_options: ""
 jenkins_java_options: "-Djenkins.install.runSetupWizard=false"
 jenkins_args: "--prefix={{ jenkins_url_prefix }} --httpsPort={{ jenkins_https_port }} --httpsCertificate=${{ jenkins_https_crt_param }} --httpsPrivateKey=${{ jenkins_https_key_param }}"
 
@@ -42,10 +43,17 @@ jenkins_process_user: jenkins
 jenkins_process_group: "{{ jenkins_process_user }}"
 
 jenkins_init_changes:
-  - option: "JENKINS_ARGS"
-    value: "{{ jenkins_args }}"
-  - option: "{{ jenkins_java_options_env_var }}"
+  - option: "JENKINS_OPTS"
+    value: "{{ jenkins_options }}"
+  - option: "JAVA_OPTS"
     value: "{{ jenkins_java_options }}"
+  - option: "JENKINS_HOME"
+    value: "{{ jenkins_home }}"
+  - option: "JENKINS_PREFIX"
+    value: "{{ jenkins_url_prefix }}"
+  - option: "JENKINS_PORT"
+    value: "{{ jenkins_http_port }}"
+
 
 jenkins_https_files:
   - src: "{{ jenkins_https_crt }}"
@@ -63,3 +71,8 @@ jenkins_proxy_port: ""
 jenkins_proxy_noproxy:
   - "127.0.0.1"
   - "localhost"
+
+jenkins_init_folder: "/etc/systemd/system/jenkins.service.d"
+jenkins_init_file: "{{ jenkins_init_folder }}/override.conf"
+
+jenkins_restart_behavior: "service"

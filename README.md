@@ -1,6 +1,6 @@
 # Ansible Role: Jenkins CI
 
-[![CI](https://github.com/geerlingguy/ansible-role-jenkins/workflows/CI/badge.svg?event=push)](https://github.com/geerlingguy/ansible-role-jenkins/actions?query=workflow%3ACI)
+[![CI](https://github.com/geerlingguy/ansible-role-jenkins/actions/workflows/ci.yml/badge.svg)](https://github.com/geerlingguy/ansible-role-jenkins/actions/workflows/ci.yml)
 
 Installs Jenkins CI on RHEL/CentOS and Debian/Ubuntu servers.
 
@@ -77,7 +77,7 @@ The URL to use for Jenkins plugin updates and update-center information.
 
 The server connection timeout, in seconds, when installing Jenkins plugins.
 
-    jenkins_version: "2.220"
+    jenkins_version: "2.346"
     jenkins_pkg_url: "http://www.example.com"
 
 (Optional) Then Jenkins version can be pinned to any version available on `http://pkg.jenkins-ci.org/debian/` (Debian/Ubuntu) or `http://pkg.jenkins-ci.org/redhat/` (RHEL/CentOS). If the Jenkins version you need is not available in the default package URLs, you can override the URL with your own; set `jenkins_pkg_url` (_Note_: the role depends on the same naming convention that `http://pkg.jenkins-ci.org/` uses).
@@ -107,17 +107,27 @@ The default repositories (listed below) can be overridden as well.
 
 It is also possible to prevent the repo file from being added by setting  `jenkins_repo_url: ''`. This is useful if, for example, you sign your own packages or run internal package management (e.g. Spacewalk).
 
+    jenkins_options: ""
+
+Extra options (e.g. setting the HTTP keep alive timeout) to pass to Jenkins on startup via `JENKINS_OPTS` in the systemd override.conf file can be configured using the var `jenkins_options`. By default, no options are specified.
+
     jenkins_java_options: "-Djenkins.install.runSetupWizard=false"
 
-Extra Java options for the Jenkins launch command configured in the init file can be set with the var `jenkins_java_options`. For example, if you want to configure the timezone Jenkins uses, add `-Dorg.apache.commons.jelly.tags.fmt.timeZone=America/New_York`. By default, the option to disable the Jenkins 2.0 setup wizard is added.
+Extra Java options for the Jenkins launch command configured via `JENKINS_JAVA_OPTS` in the systemd override.conf file can be set with the var `jenkins_java_options`. For example, if you want to configure the timezone Jenkins uses, add `-Dorg.apache.commons.jelly.tags.fmt.timeZone=America/New_York`. By default, the option to disable the Jenkins 2.0 setup wizard is added.
 
     jenkins_init_changes:
-      - option: "JENKINS_ARGS"
-        value: "--prefix={{ jenkins_url_prefix }}"
-      - option: "JENKINS_JAVA_OPTIONS"
+      - option: "JENKINS_OPTS"
+        value: "{{ jenkins_options }}"
+      - option: "JAVA_OPTS"
         value: "{{ jenkins_java_options }}"
+      - option: "JENKINS_HOME"
+        value: "{{ jenkins_home }}"
+      - option: "JENKINS_PREFIX"
+        value: "{{ jenkins_url_prefix }}"
+      - option: "JENKINS_PORT"
+        value: "{{ jenkins_http_port }}"
 
-Changes made to the Jenkins init script; the default set of changes set the configured URL prefix and add in configured Java options for Jenkins' startup. You can add other option/value pairs if you need to set other options for the Jenkins init file.
+Changes made to the Jenkins systemd override.conf file; the default set of changes set the configured URL prefix, Jenkins home directory, Jenkins port and adds the configured Jenkins and Java options for Jenkins' startup. You can add other option/value pairs if you need to set other options for the Jenkins systemd override.conf file.
 
     jenkins_proxy_host: ""
     jenkins_proxy_port: ""
@@ -126,6 +136,10 @@ Changes made to the Jenkins init script; the default set of changes set the conf
       - "localhost"
 
 If you are running Jenkins behind a proxy server, configure these options appropriately. Otherwise Jenkins will be configured with a direct Internet connection.
+
+    jenkins_restart_method: `service`
+
+You can change `jenkins_restart_method` to `safe-restart`, if you want to make sure all running jobs on the Jenkins server are completed. Otherwise `service` will restart the Jenkins systemd-service.
 
 ## Dependencies
 

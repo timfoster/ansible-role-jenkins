@@ -1,4 +1,16 @@
 ---
+- name: Check if jenkins_init_folder exists.
+  stat:
+    path: "{{ jenkins_init_folder }}"
+  register: jenkins_init_folder_stat
+
+- name: Ensure jenkins_init_folder exists.
+  file:
+    path: "{{ jenkins_init_folder }}"
+    state: directory
+    mode: 0644
+  when: not jenkins_init_folder_stat.stat.exists
+
 - name: Check if jenkins_init_file exists.
   stat:
     path: "{{ jenkins_init_file }}"
@@ -11,12 +23,18 @@
     mode: 0644
   when: not jenkins_init_file_stat.stat.exists
 
+- name: Populate jenkins_init_file with service tag.
+  copy:
+    dest: "{{ jenkins_init_file }}"
+    content: "[Service]"
+  when: not jenkins_init_file_stat.stat.exists
+
 - name: Modify variables in init file.
   lineinfile:
     dest: "{{ jenkins_init_file }}"
-    insertafter: '^{{ item.option }}='
-    regexp: '^{{ item.option }}=\"\${{ item.option }} '
-    line: '{{ item.option }}="${{ item.option }} {{ item.value }}"'
+    insertafter: '^Environment="{{ item.option }}='
+    regexp: '^Environment="{{ item.option }} '
+    line: 'Environment="{{ item.option }}={{ item.value }}"'
     state: present
     mode: 0644
   with_items: "{{ jenkins_init_changes }}"
